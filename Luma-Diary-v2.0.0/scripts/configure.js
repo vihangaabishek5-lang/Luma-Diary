@@ -1,0 +1,11 @@
+'use strict';
+const fs=require('node:fs');
+const path=require('node:path');
+const dest=path.join(__dirname,'../src/app-config.json');
+const previous=JSON.parse(fs.readFileSync(dest,'utf8'));
+const clientId=(process.env.PUBLIC_GOOGLE_CLIENT_ID||previous.googleClientId||'').trim();
+const repo=(process.env.GITHUB_REPOSITORY||previous.githubRepo||'').trim();
+if(clientId && !/^[a-zA-Z0-9._-]{12,250}\.apps\.googleusercontent\.com$/.test(clientId)) throw Error('PUBLIC_GOOGLE_CLIENT_ID has an invalid format.');
+if(repo && !/^[a-zA-Z0-9_.-]+\/[a-zA-Z0-9_.-]+$/.test(repo)) throw Error('GITHUB_REPOSITORY must look like owner/repo.');
+fs.writeFileSync(dest,JSON.stringify({googleClientId:clientId,githubRepo:repo},null,2)+'\n');
+console.log(`Prepared app settings: Google sign-in ${clientId?'configured':'not configured'}, GitHub releases ${repo||'not configured'}.`);

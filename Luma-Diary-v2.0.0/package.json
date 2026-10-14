@@ -1,0 +1,62 @@
+{
+  "name": "luma-diary",
+  "productName": "Luma Diary",
+  "version": "2.0.0",
+  "description": "Luma Diary 2: Windows private offline-first journal with glass UI, reminders, encryption and optional Google Drive sync",
+  "main": "src/main.js",
+  "author": "Luma Diary contributors",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis --x64 --publish never",
+    "build:portable": "electron-builder --win portable --x64 --publish never",
+    "configure": "node scripts/configure.js",
+    "test": "node scripts/smoke-test.js && node scripts/ui-check.js"
+  },
+  "devDependencies": {
+    "electron": "44.7.2",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "app.lumadiary.desktop",
+    "productName": "Luma Diary",
+    "directories": {
+      "output": "dist"
+    },
+    "asar": true,
+    "files": [
+      "src/**/*",
+      "assets/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "Luma-Diary-Glass-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Luma Diary",
+      "uninstallDisplayName": "Luma Diary",
+      "perMachine": false,
+      "allowElevation": false,
+      "deleteAppDataOnUninstall": false,
+      "runAfterFinish": true,
+      "warningsAsErrors": true
+    }
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}

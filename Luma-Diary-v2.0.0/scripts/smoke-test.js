@@ -1,0 +1,46 @@
+'use strict';
+const assert=require('node:assert/strict');
+const crypto=require('node:crypto');
+const v=require('../src/vault');
+const d=require('../src/drive');
+const password='A strong sample passphrase 2026!';
+const salt=v.createSalt(),key=v.keyFromPassword(password,salt);
+const db=v.defaultData();
+db.entries.push({id:crypto.randomUUID(),title:'Sample memory',body:'Private information ❤️',createdAt:'2026-10-12T03:00:00Z',updatedAt:'2026-10-12T03:00:00Z'});
+db.settings.driveAuth={clientId:'1234567890-test.apps.googleusercontent.com',refreshToken:'DO_NOT_UPLOAD'};
+const enc=v.encrypt(db,key,salt);
+assert.equal(enc.ciphertext.includes('Private information'),false);
+assert.deepEqual(v.decrypt(enc,key),db);
+assert.throws(()=>v.decrypt(enc,v.keyFromPassword('A different password 123!',salt)),/Incorrect/);
+const corrupted={...enc,ciphertext:enc.ciphertext.slice(0,-8)+'AAAAAAAA'};
+assert.throws(()=>v.decrypt(corrupted,key),/Incorrect/);
+const cloud=v.cloudData(db);
+assert.equal(cloud.settings.driveAuth,undefined);
+assert.equal(cloud.settings.cloudLastSync,undefined);
+assert.equal(cloud.entries.length,1);
+const newer={...db.entries[0],title:'New edit',updatedAt:'2026-10-13T03:00:00Z'};
+assert.equal(v.mergeEntries(db.entries,[newer])[0].title,'New edit');
+const tombstone={...newer,deletedAt:'2026-10-14T03:00:00Z',updatedAt:'2026-10-14T03:00:00Z'};
+assert.equal(v.mergeEntries([newer],[tombstone])[0].deletedAt,tombstone.deletedAt);
+assert.equal(d.checkClientId('1234567890-test.apps.googleusercontent.com'),true);
+assert.equal(d.checkClientId('not-a-client-id'),false);
+key.fill(0);
+console.log('PASS: encryption/decryption, wrong password, tampering, OAuth token exclusion, sync merge, tombstones, Client ID validation.');
+// Legacy native migration test with a deterministic in-process encrypted fixture.
+const fs=require('node:fs');
+const os=require('node:os');
+const path=require('node:path');
+const legacy=require('../src/legacy-native');
+const nativeSalt=crypto.randomBytes(24), nativeIV=crypto.randomBytes(12);
+const nativeKey=crypto.pbkdf2Sync(password,nativeSalt,600000,32,'sha256');
+const nativeCipher=crypto.createCipheriv('aes-256-gcm',nativeKey,nativeIV);
+const oldJournal={entries:[{id:'old1',title:'Old native memory',body:'Preserved ♥',createdAt:'2026-10-01T00:00:00Z',updatedAt:'2026-10-01T00:00:00Z'}],settings:{theme:'ocean',accent:'#4a8dfe',driveAuth:{refreshToken:'SENSITIVE'}}};
+const cipherbytes=Buffer.concat([nativeCipher.update(JSON.stringify(oldJournal)),nativeCipher.final(),nativeCipher.getAuthTag()]);
+const tmpDir=fs.mkdtempSync(path.join(os.tmpdir(),'luma-legacy-test-'));
+const legacyFile=path.join(tmpDir,'vault.json');
+try{
+ fs.writeFileSync(legacyFile,JSON.stringify({version:1,format:'luma-portable-v1',kdf:'pbkdf2-sha256-600000',salt:nativeSalt.toString('base64'),iv:nativeIV.toString('base64'),ciphertext:cipherbytes.toString('base64')}));
+ assert.deepEqual(legacy.decryptLegacyFile(legacyFile,password),oldJournal);
+ assert.throws(()=>legacy.decryptLegacyFile(legacyFile,'Wrong passphrase at least 10'),/Wrong passphrase/);
+}finally{fs.rmSync(tmpDir,{recursive:true,force:true});nativeKey.fill(0);}
+console.log('Legacy encrypted vault import checks passed.');
