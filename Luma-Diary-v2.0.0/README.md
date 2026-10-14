@@ -1,3 +1,10 @@
+# Luma Diary v2.1.0 — Glass Journal Preview
+
+**New in v2.1:** Open the Journal tab to write directly in a full-page, Notepad-like editor, with entry title, date, mood, manual **Save** button, **New** button, word count, encrypted storage, and recent entries on the right. Press **Ctrl+S** to save. The simple B / I / list buttons insert plain-text Markdown markers (not a full rich-text editor).
+
+Download the unsigned **test** installer from [GitHub Releases](https://github.com/vihangaabishek5-lang/Luma-Diary/releases). It has passed automated tests and Windows compilation, but full interactive testing on a physical Windows 11 PC is still needed. Back up existing diary data before updating. The cloud sign-in requires Google OAuth configuration.
+
+---
 <div align="center">
 <img src="assets/icon.png" width="116" alt="Luma Diary app icon" />
 
