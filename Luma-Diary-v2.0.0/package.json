@@ -1,8 +1,8 @@
 {
   "name": "luma-diary",
   "productName": "Luma Diary",
-  "version": "2.0.0",
-  "description": "Luma Diary 2: Windows private offline-first journal with glass UI, reminders, encryption and optional Google Drive sync",
+  "version": "2.1.0",
+  "description": "Luma Diary 2.1 — full-page plain-text journal, blue glass interface, encryption and optional Google Drive backup",
   "main": "src/main.js",
   "author": "Luma Diary contributors",
   "license": "MIT",
@@ -12,7 +12,7 @@
     "build:win": "electron-builder --win nsis --x64 --publish never",
     "build:portable": "electron-builder --win portable --x64 --publish never",
     "configure": "node scripts/configure.js",
-    "test": "node scripts/smoke-test.js && node scripts/ui-check.js"
+    "test": "node scripts/smoke-test.js && node scripts/ui-check.js && node --check src/renderer/journal-v21.js"
   },
   "devDependencies": {
     "electron": "44.7.2",
