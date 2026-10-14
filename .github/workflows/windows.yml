@@ -1,0 +1,54 @@
+name: Build Windows Installer
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'Luma-Diary-v2.0.0/**'
+      - '.github/workflows/windows.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  windows-installer:
+    name: Build Windows 11 Setup.exe
+    runs-on: windows-latest
+    defaults:
+      run:
+        working-directory: Luma-Diary-v2.0.0
+
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install app dependencies
+        run: npm install --no-audit --no-fund
+
+      - name: Run app tests
+        run: npm test
+
+      - name: Configure public app settings
+        run: npm run configure
+        env:
+          PUBLIC_GOOGLE_CLIENT_ID: ${{ vars.PUBLIC_GOOGLE_CLIENT_ID }}
+
+      - name: Build Windows installer (NSIS)
+        run: npm run build:win
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: Luma-Diary-Windows-Setup
+          path: Luma-Diary-v2.0.0/dist/*.exe
+          if-no-files-found: error
+          retention-days: 30
