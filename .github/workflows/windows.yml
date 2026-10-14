@@ -10,7 +10,7 @@ on:
       - '.github/workflows/windows.yml'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   windows-installer:
@@ -52,3 +52,17 @@ jobs:
           path: Luma-Diary-v2.0.0/dist/*.exe
           if-no-files-found: error
           retention-days: 30
+
+      - name: Publish v2.1 preview release
+        if: github.event_name == 'push' && contains(github.event.head_commit.message, '[publish-v2.1]')
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v2.1.0-preview
+          name: 'Luma Diary v2.1.0 — Glass Journal (Test Release)'
+          prerelease: true
+          make_latest: false
+          body: |
+            Luma Diary v2.1.0 test build: full-page Journal editor with Save, New Entry, plain-text writing and blue glass interface.
+            IMPORTANT: This unsigned Windows installer has not been independently verified on a physical Windows 11 PC. Keep a backup before upgrading. Microsoft SmartScreen may warn. Do not disable antivirus.
+            Google Drive sync needs a configured OAuth client ID.
+          files: Luma-Diary-v2.0.0/dist/*.exe
